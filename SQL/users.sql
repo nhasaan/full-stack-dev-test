@@ -1,3 +1,5 @@
+-- https://paiza.io/projects/_ITVhWzSewy0bmoslQSqHg?language=mysql
+
 create table Users
 (
   id integer,
