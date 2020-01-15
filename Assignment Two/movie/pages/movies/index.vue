@@ -31,7 +31,7 @@ export default {
   }),
   computed: {
     url () {
-      return `${process.env.API_BASE_URL}/movies?page=${this.page}`
+      return `${process.env.API_BASE_URL}/movies?page=${this.page}&limit=3`
     }
   },
   created () {
@@ -39,7 +39,7 @@ export default {
   },
   methods: {
     async fetchMovies () {
-      await axios.get(this.url).then(data => (this.movies = data.data))
+      await axios.get(this.url).then(data => (this.movies = data.data.docs))
     },
     infiniteScroll ($state) {
       setTimeout(() => {
@@ -47,8 +47,8 @@ export default {
         axios
           .get(this.url)
           .then((response) => {
-            if (response.data.length > 1) {
-              response.data.forEach(item => this.movies.push(item))
+            if (response.data.docs.length > 1) {
+              response.data.docs.forEach(item => this.movies.push(item))
               $state.loaded()
             } else {
               $state.complete()

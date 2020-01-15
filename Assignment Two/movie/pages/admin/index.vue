@@ -9,14 +9,19 @@
         <h2>No movie found at the moment</h2>
       </div>
     </div>
-
+    <!-- @update:pagination="onChangePagination" -->
     <div id="app">
       <v-app>
         <v-data-table
           v-model="selected"
           :headers="headers"
           :items="movies"
-          :items-per-page="5"
+          :options.sync="options"
+          :server-items-length="totalMovies"
+          :loading="loading"
+          :dense="dense"
+          :page="page"
+          :items-per-page="itemsPerPage"
           :single-select="singleSelect"
           sort-by="create_at"
           item-key="_id"
@@ -84,6 +89,7 @@
               Reset
             </v-btn>
           </template>
+          <!-- <v-pagination :length="pagination.total / 5" v-model="pagination.page" :total-visible="pagination.visible"></v-pagination> -->
         </v-data-table>
       </v-app>
     </div>
@@ -95,6 +101,12 @@ import axios from 'axios'
 export default {
   layout: 'admin-layout',
   data: () => ({
+    totalMovies: 0,
+    page: 1,
+    itemsPerPage: 5,
+    loading: true,
+    dense: true,
+    options: {},
     dialog: false,
     singleSelect: true,
     selected: [],
@@ -129,23 +141,42 @@ export default {
   computed: {
     formTitle () {
       return this.editedIndex === -1 ? 'Create Movie' : 'Edit Movie'
+    },
+    url () {
+      return `${process.env.API_BASE_URL}/movies?page=${this.page}&limit=${this.itemsPerPage}`
     }
   },
   watch: {
     dialog (val) {
       val || this.close()
+    },
+    options: {
+      handler () {
+        this.loading = true
+        setTimeout(() => {
+          this.fetchMovies()
+        }, 500)
+      },
+      deep: true
     }
   },
-  created () {
-    this.fetchMovies()
-  },
+  // created () {
+  //   this.fetchMovies()
+  // },
   methods: {
     fetchMovies () {
-      axios
-        .get(`${process.env.API_BASE_URL}/movies`)
-        .then(data => (this.movies = data.data))
+      const { page, itemsPerPage } = this.options
+      this.page = page
+      this.itemsPerPage = itemsPerPage
+      axios.get(this.url).then((response) => {
+        this.movies = response.data.docs
+        this.totalMovies = response.data.totalDocs
+        this.loading = false
+      })
     },
-
+    // onChangePagination (pagination) {
+    //   console.log('update:pagination', pagination)
+    // },
     editItem (item) {
       this.editedIndex = this.movies.indexOf(item)
       this.editedItem = Object.assign({}, item)
